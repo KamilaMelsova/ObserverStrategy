@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>News Portal</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+    <div class="logo">News Portal</div>
+    <ul class="nav-links">
+        <li data-category="All">All</li>
+        <li data-category="Politics">Politics</li>
+        <li data-category="Sports">Sports</li>
+        <li data-category="Tech">Tech</li>
+    </ul>
+    <select id="strategySelect">
+        <option value="Email">Email</option>
+        <option value="SMS">SMS</option>
+        <option value="Push">Push</option>
+    </select>
+</nav>
+<section class="form-section">
+    <h2>Create new article</h2>
+    <form id="articleForm">
+        <input type="text" id="title" placeholder="Title" required>
+        <textarea id="content" placeholder="Content of the Article" required></textarea>
+        <input type="text" id="author" placeholder="Author" required>
+        <select id="category" required>
+            <option value="Politics">Politics</option>
+            <option value="Sports">Sports</option>
+            <option value="Tech">Tech</option>
+        </select>
+        <input type="text" id="imageUrl" placeholder="image url">
+        <label><input type="checkbox" id="featured"> Featured</label>
+        <label><input type="checkbox" id="breaking"> Breaking</label>
+        <button type="submit">Publish</button>
+    </form>
+</section>
+<section class="articles-section">
+    <h2>Latest Articles</h2>
+    <div id="articlesContainer"></div>
+</section>
+<div id="toast-container"></div>
+<script src="/js/main.js"></script>
+</body>
+</html>
