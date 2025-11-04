@@ -17,11 +17,11 @@ public class ArticleController{
         agency.register(new Subscriber("Aigerim", new SMSNotification()));
     }
     @PostMapping
-    public String publishArticle(@RequestBody ArticleRequest req) {
+    public Map<String, Object> publishArticle(@RequestBody ArticleRequest req){
         ArticleFactory factory;
-        if (req.getCategory().equalsIgnoreCase("Politics")) {
+        if (req.getCategory().equalsIgnoreCase("Politics")){
             factory = new PoliticsArticleFactory();
-        } else {
+        } else{
             factory = new SportsArticleFactory();
         }
         Article article = new Article.Builder()
@@ -36,26 +36,28 @@ public class ArticleController{
         ArticleInterface decorated = new BaseArticle(article);
         if (req.isBreaking()) decorated = new BreakingNewsDecorator(decorated);
         if (req.isFeatured()) decorated = new FeaturedDecorator(decorated);
-
         articles.add(article);
-
         List<Subscriber> subs = authorSubscribers.getOrDefault(article.getAuthor(), new ArrayList<>());
+        List<String> notifications = new ArrayList<>();
         for (Subscriber s : subs) {
-            s.getStrategy().sendNotification(
-                    "New material from " + article.getAuthor() + ": " + article.getTitle(),
-                    s.getName()
-            );
+            String msg = "📰 " + article.getAuthor() + " published new article: " + article.getTitle();
+            s.getStrategy().sendNotification(msg, s.getName());
+            notifications.add(msg + " (" + s.getName() +
+                    " via " + s.getStrategy().getClass().getSimpleName().replace("Notification", "") + ")");
         }
-        return "Article published: " + decorated.display();
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Article published: " + decorated.display());
+        response.put("notifications", notifications);
+        return response;
     }
     @GetMapping
     public List<Article> getAll(){return articles;}
     @PostMapping("/subscribe")
     public String subscribeToAuthor(@RequestParam String subscriberName,
                                     @RequestParam String author,
-                                    @RequestParam String strategyType){
+                                    @RequestParam String strategyType) {
         NotificationStrategy strategy;
-        switch (strategyType.toLowerCase()){
+        switch (strategyType.toLowerCase()) {
             case "sms":
                 strategy = new SMSNotification();
                 break;
@@ -70,35 +72,33 @@ public class ArticleController{
         return subscriberName + " subscribed on " + author + " using " + strategyType.toUpperCase() + ".";
     }
     @GetMapping("/demo")
-    public String showPatterns() {
+    public String showPatterns(){
         StringBuilder demo = new StringBuilder();
         ArticleFactory politicsFactory = new PoliticsArticleFactory();
         ArticleFactory sportsFactory = new SportsArticleFactory();
         Article p = politicsFactory.createArticle("Election Results", "New president elected");
         Article s = sportsFactory.createArticle("Football Finals", "Team A wins");
-        demo.append("🏭 <b>Factory Pattern:</b><br>")
-                .append(p.getCategory()).append(" → ").append(p.getTitle()).append("<br>")
-                .append(s.getCategory()).append(" → ").append(s.getTitle()).append("<br><br>");
+        demo.append("<b>Factory Pattern:</b><br>")
+                .append(p.getCategory()).append(" - ").append(p.getTitle()).append("<br>")
+                .append(s.getCategory()).append(" - ").append(s.getTitle()).append("<br><br>");
         Article base = new Article.Builder()
                 .setTitle("Breaking: Fire in City")
                 .setContent("Firefighters on scene")
                 .setCategory("News")
                 .build();
         ArticleInterface decorated = new BreakingNewsDecorator(new BaseArticle(base));
-        demo.append("🎨 <b>Decorator Pattern:</b><br>")
+        demo.append("<b>Decorator Pattern:</b><br>")
                 .append(decorated.display()).append("<br><br>");
         agency.notifySubscribers("New article: Earthquake ");
-        demo.append("👁️ <b>Observer + Strategy:</b><br>")
+        demo.append("<b>Observer + Strategy:</b><br>")
                 .append("Subscribers notified using Email and SMS.<br><br>");
         Article built = new Article.Builder()
                 .setTitle("Builder Demo")
                 .setContent("Article built using Builder")
                 .setCategory("Tech")
                 .build();
-        demo.append("🏗️ <b>Builder Pattern:</b><br>")
-                .append(built.getCategory()).append(" → ").append(built.getTitle());
+        demo.append("<b>Builder Pattern:</b><br>")
+                .append(built.getCategory()).append(" - ").append(built.getTitle());
         return demo.toString();
     }
 }
-
-
